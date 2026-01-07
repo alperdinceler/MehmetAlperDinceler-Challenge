@@ -356,7 +356,7 @@ export const transferAdminCap = (adminCapId: string, to: string) => {
    ```typescript
    // Set this value to the Package ID in the transaction summary of step 2
    // File `ui/src/networkConfig.ts`
-   const PACKAGE_ID = ''
+   const PACKAGE_ID = '0x192f3ca60b8642d6f03752046e7ea72cbe6168f2e340a5ac7168040e3cb788ec'
    ```
 
 4. **Installing User Interface Dependencies**

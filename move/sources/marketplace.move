@@ -44,56 +44,86 @@ public struct HeroBought has copy, drop {
 // ========= FUNCTIONS =========
 
 fun init(ctx: &mut TxContext) {
+    // 1. AdminCap (Yönetici Yetkisi) oluşturuluyor
+    let admin_cap = AdminCap {
+        id: object::new(ctx)
+    };
 
-    // NOTE: The init function runs once when the module is published
-    // TODO: Initialize the module by creating AdminCap
-        // Hints:
-        // Create AdminCap id with object::new(ctx)
-    // TODO: Transfer it to the module publisher (ctx.sender()) using transfer::public_transfer() function
+    // 2. Bu yetkiyi (Capability) modülü yayınlayan kişiye (deployer) gönderiyoruz
+    transfer::public_transfer(admin_cap, tx_context::sender(ctx));
 }
 
 public fun list_hero(nft: Hero, price: u64, ctx: &mut TxContext) {
+    
+    // Listeleme objesi için yeni bir ID oluşturuyoruz
+    let id = object::new(ctx);
 
-    // TODO: Create a list_hero object for marketplace
-        // Hints:
-        // - Use object::new(ctx) for unique ID
-        // - Set nft, price, and seller (ctx.sender()) fields
-    // TODO: Emit HeroListed event with listing details (Don't forget to use object::id(&list_hero) )
-    // TODO: Use transfer::share_object() to make it publicly tradeable
+    // Event fırlatıyoruz (Objeyi oluşturmadan önce ID'sini alabiliriz)
+    event::emit(HeroListed {
+        list_hero_id: object::uid_to_inner(&id),
+        price: price,
+        seller: tx_context::sender(ctx),
+        timestamp: ctx.epoch_timestamp_ms(),
+    });
+
+    // 1. ListHero objesini oluşturuyoruz (Hero'yu içine hapsediyoruz - Wrapping)
+    let listing = ListHero {
+        id: id,
+        nft: nft,
+        price: price,
+        seller: tx_context::sender(ctx),
+    };
+
+    // 2. Obje herkes tarafından görülebilmesi ve satın alınabilmesi için paylaşıma açılıyor
+    transfer::share_object(listing);
 }
 
 #[allow(lint(self_transfer))]
 public fun buy_hero(list_hero: ListHero, coin: Coin<SUI>, ctx: &mut TxContext) {
 
-    // TODO: Destructure list_hero to get id, nft, price, and seller
-        // Hints:
-        // let ListHero { id, nft, price, seller } = list_hero;
-    // TODO: Use assert! to verify coin value equals listing price (coin::value(&coin) == price) else abort with `EInvalidPayment`
-    // TODO: Transfer coin to seller (use transfer::public_transfer() function)
-    // TODO: Transfer hero NFT to buyer (ctx.sender())
-    // TODO: Emit HeroBought event with transaction details (Don't forget to use object::uid_to_inner(&id) )
-    // TODO: Delete the listing ID (object::delete(id))
+    // 1. Objeyi parçala (Unpack). Bu işlem ListHero kutusunu açar ve içindekileri çıkarır.
+    let ListHero { id, nft, price, seller } = list_hero;
+
+    // 2. Ödenen miktar ile fiyatı kontrol et. Yanlışsa işlemi iptal et (abort).
+    assert!(coin::value(&coin) == price, EInvalidPayment);
+
+    // 3. Parayı satıcıya gönder
+    transfer::public_transfer(coin, seller);
+
+    // 4. Hero'yu (NFT) satın alana (buyer/sender) gönder
+    transfer::public_transfer(nft, tx_context::sender(ctx));
+
+    // Event fırlat (İşlem başarılı)
+    event::emit(HeroBought {
+        list_hero_id: object::uid_to_inner(&id),
+        price: price,
+        buyer: tx_context::sender(ctx),
+        seller: seller,
+        timestamp: ctx.epoch_timestamp_ms(),
+    });
+
+    // 5. Artık işlevi biten ListHero objesinin ID'sini sil
+    object::delete(id);
 }
 
 // ========= ADMIN FUNCTIONS =========
 
 public fun delist(_: &AdminCap, list_hero: ListHero) {
+    
+    // 1. Objeyi parçala ama 'price' ile ilgilenmiyoruz (ignore syntax: price: _)
+    let ListHero { id, nft, price: _, seller } = list_hero;
 
-    // NOTE: The AdminCap parameter ensures only admin can call this
-    // TODO: Implement admin delist functionality
-        // Hints:
-        // Destructure list_hero (ignore price with "price: _")
-    // TODO:Transfer NFT back to original seller
-    // TODO:Delete the listing ID (object::delete(id))
+    // 2. NFT'yi asıl sahibine (listeyi oluşturan kişiye) geri gönder
+    transfer::public_transfer(nft, seller);
+
+    // 3. Listeleme ID'sini sil
+    object::delete(id);
 }
 
 public fun change_the_price(_: &AdminCap, list_hero: &mut ListHero, new_price: u64) {
     
-    // NOTE: The AdminCap parameter ensures only admin can call this
-    // list_hero has &mut so price can be modified     
-    // TODO: Update the listing price
-        // Hints:
-        // Access the price field of list_hero and update it
+    // 1. Referans (&mut) üzerinden fiyatı güncelle
+    list_hero.price = new_price;
 }
 
 // ========= GETTER FUNCTIONS =========

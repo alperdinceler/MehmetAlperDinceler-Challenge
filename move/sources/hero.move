@@ -23,9 +23,22 @@ public fun create_hero(name: String, image_url: String, power: u64, ctx: &mut Tx
     // TODO: Create a new Hero struct with the given parameters
         // Hints:
         // Use object::new(ctx) to create a unique ID
+        
         // Set name, image_url, and power fields
+    let hero = Hero {
+        id: sui::object::new(ctx), 
+        name: name,
+        image_url: image_url,
+        power: power,
+    };
     // TODO: Transfer the hero to the transaction sender
-    // TODO: Create HeroMetadata and freeze it for tracking
+    transfer::transfer(hero, tx_context::sender(ctx));
+    // TODO: Create HeroMetadata and freeze it for trackingSS
+    let metadata = HeroMetadata {
+        id: sui::object::new(ctx),
+        timestamp: ctx.epoch_timestamp_ms(),
+    };
+    transfer::freeze_object(metadata);
         // Hints:
         // Use ctx.epoch_timestamp_ms() for timestamp
     //TODO: Use transfer::freeze_object() to make metadata immutable

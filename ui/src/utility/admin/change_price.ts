@@ -6,6 +6,8 @@ export const changePrice = (packageId: string, listHeroId: string, newPriceInSui
   // TODO: Convert SUI to MIST (1 SUI = 1,000,000,000 MIST)
     // Hints:
     // const newPriceInMist = ?
+
+  const newPriceInMist = BigInt(Math.floor(Number(newPriceInSui) * 1_000_000_000));
   // TODO: Add moveCall to change hero price (Admin only)
   // Function: `${packageId}::marketplace::change_the_price`
   // Arguments: adminCapId (object), listHeroId (object), newPriceInMist (u64)
@@ -13,6 +15,13 @@ export const changePrice = (packageId: string, listHeroId: string, newPriceInSui
     // Use tx.object() for objects
     // Use tx.pure.u64() for the new price
     // Convert price from SUI to MIST before sending
-  
+  tx.moveCall({
+    target: `${packageId}::marketplace::change_the_price`,
+    arguments: [
+      tx.object(adminCapId),        // AdminCap bir obje referansıdır
+      tx.object(listHeroId),        // Listelenen Hero bir obje referansıdır
+      tx.pure.u64(newPriceInMist),  // Fiyat primitive bir değerdir (u64)
+    ],
+  });
   return tx;
 };

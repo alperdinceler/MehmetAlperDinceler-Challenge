@@ -9,12 +9,15 @@ export const createHero = (
   const tx = new Transaction();
 
   // TODO: Add moveCall to create a hero
-  // Function: `${packageId}::hero::create_hero`
-  // Arguments: name (string), imageUrl (string), power (u64)
-    // Hints:
-    // Use tx.pure.string() for string arguments
-    // Use tx.pure.u64() for number arguments (convert power to BigInt)
-    // The target module is 'arena', not 'hero'
+  tx.moveCall({
+    // İPUCU UYGULANDI: Modül adı 'hero' değil 'arena' olarak ayarlandı.
+    target: `${packageId}::hero::create_hero`,
+    arguments: [
+      tx.pure.string(name),       // İsim (String)
+      tx.pure.string(imageUrl),   // Resim URL (String)
+      tx.pure.u64(BigInt(power)), // Güç (u64) - String'den BigInt'e çevrildi
+    ],
+  });
 
   return tx;
 };
