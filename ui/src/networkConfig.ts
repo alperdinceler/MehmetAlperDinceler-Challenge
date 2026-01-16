@@ -8,7 +8,7 @@ import { createNetworkConfig } from "@mysten/dapp-kit";
  * ```bash
  *  Published Objects:
  * ┌──
- * │ PackageID: 0xdbd32a4b9802fab3bca9f7c7cb339d9a88d3b271581280cb83df487ce87a65e6
+ * │ PackageID: 0xd1b43dae2a9bb4e71e702a7ff11383c78c786640f30bb6bb5dcc5fb9e8c3e7a8
  * │ Version: 1
  * │ Digest: bn8Vs7TgMzhyPN4GtjDdjTfufX67dErp4926bQeCSFr
  * │ Modules: arena, hero, marketplace
